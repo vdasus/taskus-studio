@@ -8,6 +8,12 @@ public sealed record OutputLine(string Text, bool IsError, bool IsWarning);
 /// <summary>Runs the configured taskus executable for Validate and Dry run.</summary>
 public static partial class TaskusCli
 {
+    /// <summary>Full version of this Studio build, with the commit when the build knows it (0.8.1+3b38234...).</summary>
+    public static string StudioVersion { get; } = InformationalVersion(typeof(TaskusCli).Assembly);
+
+    /// <summary>Full version of the Taskus.Core package this build uses.</summary>
+    public static string CoreFullVersion { get; } = InformationalVersion(typeof(Taskus.Config.TaskLoader).Assembly);
+
     /// <summary>The major.minor of Taskus.Core that this build of Studio was made for.</summary>
     public static string CoreVersion { get; } = typeof(Taskus.Config.TaskLoader).Assembly.GetName().Version is { } v ? $"{v.Major}.{v.Minor}" : "?";
 
@@ -64,6 +70,10 @@ public static partial class TaskusCli
             : MajorMinor(taskusVersion) == CoreVersion
                 ? null
                 : $"taskus is {taskusVersion}, this Studio is made for Taskus {CoreVersion}.x: settings may be rejected or missing.";
+
+    private static string InformationalVersion(System.Reflection.Assembly assembly) =>
+        System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(assembly)?.InformationalVersion
+        ?? assembly.GetName().Version?.ToString() ?? "?";
 
     public static string MajorMinor(string version) => string.Join('.', version.Split('.', '-', '+').Take(2));
 

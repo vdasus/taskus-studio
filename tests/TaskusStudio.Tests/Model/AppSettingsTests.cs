@@ -18,6 +18,19 @@ public class AppSettingsTests
 
     [Fact]
     [Trait("Category", "Integration")]
+    public void PanelWidths_SurviveSaveAndLoad()
+    {
+        using var app = new TempFolder();
+        var settings = AppSettings.Load(app.Path, app.Path);
+        settings.PanelWidths = [250, 600.5, 300];
+
+        settings.Save();
+
+        AppSettings.Load(app.Path, app.Path).PanelWidths.Should().Equal(250, 600.5, 300);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     [Trait("Priority", "High")]
     public void Location_MissingAppFolder_FallsBackToUserFolder()
     {

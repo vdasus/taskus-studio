@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using TaskusStudio.ViewModels;
 
 namespace TaskusStudio.Views;
@@ -18,6 +19,15 @@ public sealed partial class FieldView : UserControl
             field = DataContext as FieldViewModel;
             if (field is not null)
                 field.PropertyChanged += OnFieldChanged;
+        };
+        BrowseFolder.Click += async (_, _) =>
+        {
+            if (field is null || TopLevel.GetTopLevel(this) is not { } top)
+                return;
+            var start = field.Text.Length > 0 && Directory.Exists(field.Text) ? await top.StorageProvider.TryGetFolderFromPathAsync(field.Text) : null;
+            var folders = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = field.Name, SuggestedStartLocation = start });
+            if (folders.FirstOrDefault()?.TryGetLocalPath() is { } path)
+                field.Text = path;
         };
     }
 

@@ -22,6 +22,9 @@ public sealed class TemplateEditor : UserControl
     public static readonly StyledProperty<IReadOnlyList<string>> ColumnsProperty =
         AvaloniaProperty.Register<TemplateEditor, IReadOnlyList<string>>(nameof(Columns), []);
 
+    public static readonly StyledProperty<bool> IsMultilineProperty =
+        AvaloniaProperty.Register<TemplateEditor, bool>(nameof(IsMultiline));
+
     private static readonly Lazy<IHighlightingDefinition> Scriban = new(() =>
     {
         using var stream = typeof(TemplateEditor).Assembly.GetManifestResourceStream("Scriban.xshd")!;
@@ -77,6 +80,13 @@ public sealed class TemplateEditor : UserControl
         set => SetValue(ColumnsProperty, value);
     }
 
+    /// <summary>A taller editor with a scroll bar, for request bodies.</summary>
+    public bool IsMultiline
+    {
+        get => GetValue(IsMultilineProperty);
+        set => SetValue(IsMultilineProperty, value);
+    }
+
     public void FocusEditor()
     {
         editor.Focus();
@@ -91,6 +101,15 @@ public sealed class TemplateEditor : UserControl
             syncing = true;
             editor.Document = new TextDocument(Text ?? "");
             syncing = false;
+        }
+        else if (change.Property == IsMultilineProperty)
+        {
+            editor.MinHeight = IsMultiline ? 90 : 26;
+            editor.MaxHeight = IsMultiline ? 260 : double.PositiveInfinity;
+            editor.ShowLineNumbers = IsMultiline;
+            editor.VerticalScrollBarVisibility = IsMultiline
+                ? Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+                : Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled;
         }
     }
 

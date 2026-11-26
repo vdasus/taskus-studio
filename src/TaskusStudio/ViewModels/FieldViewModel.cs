@@ -13,6 +13,29 @@ public sealed partial class KeyValueViewModel : ObservableObject
 {
     [ObservableProperty] private string key = "";
     [ObservableProperty] private string value = "";
+
+    /// <summary>Secret names for the picker, set by the field.</summary>
+    public IReadOnlyList<string> SecretNames { get => secretNames; set => SetProperty(ref secretNames, value); }
+    private IReadOnlyList<string> secretNames = [];
+
+    /// <summary>The first secret in the value; choosing one replaces it, or appends ${secret:name} ("Bearer " + token).</summary>
+    public string? SelectedSecret
+    {
+        get => AnySecretReference().Match(Value) is { Success: true } m ? m.Groups[1].Value : null;
+        set
+        {
+            if (value is null || value == SelectedSecret)
+                return;
+            var reference = $"${{secret:{value}}}";
+            var match = AnySecretReference().Match(Value);
+            Value = match.Success ? Value.Remove(match.Index, match.Length).Insert(match.Index, reference) : Value + reference;
+        }
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"\$\{secret:([^}]+)\}")]
+    private static partial System.Text.RegularExpressions.Regex AnySecretReference();
+
+    partial void OnValueChanged(string value) => OnPropertyChanged(nameof(SelectedSecret));
 }
 
 /// <summary>One editable setting. Empty text means "not set": the writer leaves it out and Taskus uses its default.</summary>
@@ -29,7 +52,14 @@ public sealed partial class FieldViewModel : ObservableObject
         Entries.CollectionChanged += (_, e) =>
         {
             foreach (KeyValueViewModel item in e.NewItems ?? Array.Empty<KeyValueViewModel>())
-                item.PropertyChanged += (_, _) => Changed();
+            {
+                item.SecretNames = SecretNames;
+                item.PropertyChanged += (_, a) =>
+                {
+                    if (a.PropertyName is nameof(KeyValueViewModel.Key) or nameof(KeyValueViewModel.Value))
+                        Changed();
+                };
+            }
             Changed();
         };
     }
@@ -51,6 +81,17 @@ public sealed partial class FieldViewModel : ObservableObject
     public bool IsText => !IsTemplate && Spec.Kind is FieldKind.Text or FieldKind.Integer or FieldKind.Number or FieldKind.List;
 
     public bool IsMultiline => !IsTemplate && Spec.Kind == FieldKind.MultilineText;
+
+    /// <summary>A template that spans lines (request body): a taller editor.</summary>
+    public bool IsMultilineTemplate => IsTemplate && Spec.Kind == FieldKind.MultilineText;
+
+    /// <summary>Folders: a Browse button next to the box.</summary>
+    public bool IsFolder => IsText && Spec.Description.Contains("folder", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>What completion the template editor offers.</summary>
+    public string TemplateHint => TemplateColumns.Count > 0
+        ? "Completion: type row. or press Ctrl+Space for the columns, | inside {{ }} for functions."
+        : "Completion: type | inside {{ }} for functions.";
 
     public bool IsBool => Spec.Kind == FieldKind.Bool;
 
@@ -87,11 +128,30 @@ public sealed partial class FieldViewModel : ObservableObject
     public ObservableCollection<KeyValueViewModel> Entries { get; } = [];
 
     /// <summary>Fields of the row a template sees, for completion; set by the document.</summary>
-    public IReadOnlyList<string> TemplateColumns { get => templateColumns; set => SetProperty(ref templateColumns, value); }
+    public IReadOnlyList<string> TemplateColumns
+    {
+        get => templateColumns;
+        set
+        {
+            if (SetProperty(ref templateColumns, value))
+                OnPropertyChanged(nameof(TemplateHint));
+        }
+    }
     private IReadOnlyList<string> templateColumns = [];
 
     /// <summary>Secret names for the picker, set by the document.</summary>
-    public IReadOnlyList<string> SecretNames { get => secretNames; set => SetProperty(ref secretNames, value); }
+    public IReadOnlyList<string> SecretNames
+    {
+        get => secretNames;
+        set
+        {
+            if (!SetProperty(ref secretNames, value))
+                return;
+            foreach (var entry in Entries)
+                entry.SecretNames = value;
+        }
+    }
+
     private IReadOnlyList<string> secretNames = [];
 
     [ObservableProperty] private string text = "";

@@ -13,10 +13,15 @@
     </Grid>
     <TextBlock Classes="muted" Text="{Binding Description}" />
 
-    <TextBox x:Name="TextBoxInput" IsVisible="{Binding IsText}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
-             Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsText}">
+      <TextBox x:Name="TextBoxInput" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
+               Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <Button x:Name="BrowseFolder" Grid.Column="1" Content="Browse..." Margin="6,0,0,0" IsVisible="{Binding IsFolder}"
+              VerticalAlignment="Top" ToolTip.Tip="Choose a folder" />
+    </Grid>
     <v:TemplateEditor x:Name="TemplateInput" IsVisible="{Binding IsTemplate}" Text="{Binding Text, Mode=TwoWay}"
-                      Columns="{Binding TemplateColumns}" />
+                      Columns="{Binding TemplateColumns}" IsMultiline="{Binding IsMultilineTemplate}" />
+    <TextBlock Classes="muted" FontSize="11" Text="{Binding TemplateHint}" IsVisible="{Binding IsTemplate}" />
     <TextBox x:Name="MultilineInput" IsVisible="{Binding IsMultiline}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
              AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="90" MaxHeight="260" Classes="mono"
              Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
@@ -28,10 +33,13 @@
       <ItemsControl ItemsSource="{Binding Entries}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:KeyValueViewModel">
-            <Grid ColumnDefinitions="*,4,2*,Auto" Margin="0,0,0,4">
+            <Grid ColumnDefinitions="*,4,2*,Auto,Auto" Margin="0,0,0,4">
               <TextBox Text="{Binding Key}" PlaceholderText="name" />
               <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="value" />
-              <Button Grid.Column="3" Classes="icon" Content="✕" ToolTip.Tip="Remove"
+              <ComboBox Grid.Column="3" ItemsSource="{Binding SecretNames}" SelectedItem="{Binding SelectedSecret, Mode=TwoWay}"
+                        PlaceholderText="secret" MinWidth="90" FontSize="12" Margin="4,0,0,0"
+                        ToolTip.Tip="Insert ${secret:name} into the value (e.g. after 'Bearer '); only the names from the secrets file are shown" />
+              <Button Grid.Column="4" Classes="icon" Content="✕" ToolTip.Tip="Remove"
                       Command="{Binding $parent[ItemsControl].((vm:FieldViewModel)DataContext).RemoveEntryCommand}"
                       CommandParameter="{Binding}" />
             </Grid>

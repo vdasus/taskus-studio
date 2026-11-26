@@ -99,6 +99,130 @@ public class FieldTests
 
     [Fact]
     [Trait("Category", "Unit")]
+    [Trait("Priority", "High")]
+    public void ExcelSourceFolder_FillsProcessedAndFailed_WhileTheyFollowIt()
+    {
+        var doc = TestData.NewDocument();
+        var folder = doc.Source.Field("folder")!;
+
+        folder.Text = "in";
+        folder.Text = "inbox";
+
+        doc.Source.Field("processed")!.Text.Should().Be(Path.Join("inbox", "done"));
+        doc.Source.Field("failed")!.Text.Should().Be(Path.Join("inbox", "failed"));
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void ExcelSourceFolder_KeepsAProcessedFolderTheUserChose()
+    {
+        var doc = TestData.NewDocument();
+        doc.Source.Field("processed")!.Text = "archive";
+
+        doc.Source.Field("folder")!.Text = "in";
+
+        doc.Source.Field("processed")!.Text.Should().Be("archive");
+        doc.Source.Field("failed")!.Text.Should().Be(Path.Join("in", "failed"));
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Priority", "High")]
+    public void LoadingATaskFile_DoesNotAddProcessedOrFailed()
+    {
+        var doc = TestData.NewDocument();
+
+        doc.LoadText("source:\n  type: excel\n  folder: in\nsink:\n  type: excel\n  folder: out\n  file: x.xlsx\n", null);
+
+        doc.Source.Field("processed")!.Text.Should().BeEmpty();
+        doc.YamlText.Should().NotContain("processed").And.NotContain("failed");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void FolderFields_HaveBrowse_OtherTextFieldsDoNot()
+    {
+        var doc = TestData.NewDocument();
+
+        doc.Source.Field("folder")!.IsFolder.Should().BeTrue();
+        doc.Source.Field("processed")!.IsFolder.Should().BeTrue();
+        doc.Sink.Field("folder")!.IsFolder.Should().BeTrue();
+        doc.Source.Field("pattern")!.IsFolder.Should().BeFalse();
+        doc.Sink.Field("file")!.IsFolder.Should().BeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void HttpSourceBody_IsAMultilineTemplate_UrlIsNot()
+    {
+        var doc = TestData.NewDocument();
+        doc.Source.Type = "http";
+
+        doc.Source.Field("body")!.IsMultilineTemplate.Should().BeTrue();
+        doc.Source.Field("url")!.IsMultilineTemplate.Should().BeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void TemplateHint_NamesColumnCompletion_OnlyWhenThereAreColumns()
+    {
+        var doc = TestData.NewDocument();
+        doc.Sink.Type = "http";
+        var url = doc.Sink.Field("url")!;
+        url.TemplateHint.Should().NotContain("row.");
+
+        doc.AddColumn("Vardas");
+
+        url.TemplateHint.Should().Contain("row.");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Priority", "High")]
+    public void HeaderSecret_AppendsAfterAPrefix_AndReplacesAnEarlierOne()
+    {
+        var doc = TestData.NewDocument();
+        doc.Sink.Type = "http";
+        var headers = doc.Sink.Field("headers")!;
+        headers.AddEntryCommand.Execute(null);
+        var entry = headers.Entries[0];
+        entry.Key = "Authorization";
+        entry.Value = "Bearer ";
+
+        entry.SelectedSecret = "api_token";
+        entry.Value.Should().Be("Bearer ${secret:api_token}");
+
+        entry.SelectedSecret = "other_token";
+        entry.Value.Should().Be("Bearer ${secret:other_token}");
+        doc.YamlText.Should().Contain("Authorization: Bearer ${secret:other_token}");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void HeaderEntries_GetTheSecretNamesOfTheDocument()
+    {
+        var doc = TestData.NewDocument();
+        doc.Sink.Type = "http";
+        var headers = doc.Sink.Field("headers")!;
+        headers.AddEntryCommand.Execute(null);
+
+        headers.SecretNames = ["a", "b"];
+
+        headers.Entries[0].SecretNames.Should().Equal("a", "b");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public void Output_StartsWithTheFullStudioVersion()
+    {
+        var doc = TestData.NewDocument();
+
+        doc.Output[0].Text.Should().StartWith($"Taskus Studio {TaskusStudio.Model.TaskusCli.StudioVersion}");
+        TaskusStudio.Model.TaskusCli.StudioVersion.Should().MatchRegex(@"^\d+\.\d+\.\d+");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
     public void PlainFields_AreNotTemplates()
     {
         var doc = TestData.NewDocument();

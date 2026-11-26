@@ -63,15 +63,47 @@ public sealed partial class SectionViewModel : ObservableObject
             Fields.Add(field);
         }
 
+        LinkFolderDefaults();
         changed();
     }
+
+    private bool loadingFile;
+
+    // Excel source: processed and failed follow folder (folder\done, folder\failed) while empty or still derived.
+    private void LinkFolderDefaults()
+    {
+        if (Field("folder") is not { } folder)
+            return;
+        var linked = new[] { (Field: Field("processed"), Sub: "done"), (Field: Field("failed"), Sub: "failed") }.Where(l => l.Field is not null).ToList();
+        if (linked.Count == 0)
+            return;
+        var previous = folder.Text;
+        folder.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(FieldViewModel.Text))
+                return;
+            var old = previous;
+            previous = folder.Text;
+            if (loadingFile)
+                return;
+            foreach (var (field, sub) in linked)
+            {
+                if (field!.Text.Length == 0 || field.Text == Derived(old, sub))
+                    field.Text = Derived(folder.Text, sub);
+            }
+        };
+    }
+
+    private static string Derived(string folder, string sub) => folder.Trim().Length == 0 ? "" : Path.Join(folder.Trim(), sub);
 
     public FieldViewModel? Field(string name) => Fields.FirstOrDefault(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase));
 
     public void Clear()
     {
+        loadingFile = true;
         foreach (var field in Fields)
             field.Clear();
+        loadingFile = false;
     }
 
     public YamlMappingNode ToYaml()
@@ -90,6 +122,19 @@ public sealed partial class SectionViewModel : ObservableObject
 
     /// <summary>Fills the section from a task file; returns the paths of keys it does not know.</summary>
     public IEnumerable<string> Load(YamlMappingNode map, string path)
+    {
+        loadingFile = true;
+        try
+        {
+            return LoadFields(map, path);
+        }
+        finally
+        {
+            loadingFile = false;
+        }
+    }
+
+    private List<string> LoadFields(YamlMappingNode map, string path)
     {
         var unknown = new List<string>();
         if (typeOf is not null)

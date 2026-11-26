@@ -30,6 +30,7 @@ public sealed partial class MainViewModel : ObservableObject
         Run = new SectionViewModel(Schema.RunSettings, Changed);
         MapEntries.CollectionChanged += (_, _) => Changed();
         loading = false;
+        Output.Add(new OutputLine($"Taskus Studio {TaskusCli.StudioVersion}, Taskus.Core {TaskusCli.CoreFullVersion}", false, false));
         LoadSecrets();
         RefreshPreviewSource(force: true);
         Refresh();
@@ -69,10 +70,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private int rowIndex;
     [ObservableProperty] private bool showYaml = true;
     [ObservableProperty] private bool showRunSettings;
+    [ObservableProperty] private bool sourceCollapsed;
+    [ObservableProperty] private bool mapCollapsed;
+    [ObservableProperty] private bool sinkCollapsed;
     [ObservableProperty] private bool isRunning;
     [ObservableProperty] private int bottomTab;
 
-    public string Title => $"{(FilePath is null ? "untitled" : Path.GetFileName(FilePath))}{(IsDirty ? " *" : "")} - Taskus Studio for Taskus {TaskusCli.CoreVersion}";
+    public string Title => $"{(FilePath is null ? "untitled" : Path.GetFileName(FilePath))}{(IsDirty ? " *" : "")} - Taskus Studio {TaskusCli.StudioVersion.Split('+')[0]} for Taskus {TaskusCli.CoreVersion}";
 
     public string ProblemsHeader => Problems.Count == 0 ? "Problems" : $"Problems ({Problems.Count})";
 

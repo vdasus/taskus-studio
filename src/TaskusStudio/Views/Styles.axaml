@@ -75,8 +75,20 @@
     <Setter Property="CornerRadius" Value="12" />
     <Setter Property="FontSize" Value="12" />
   </Style>
-  <Style Selector="Button.icon">
+  <Style Selector="Button.icon, ToggleButton.icon">
     <Setter Property="Padding" Value="6,2" />
     <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <!-- Title strip of a collapsed panel: a checked toggle, drawn like a plain button. -->
+  <Style Selector="ToggleButton.strip">
+    <Setter Property="Padding" Value="4,6" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ToggleButton.strip:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource TextControlForeground}" />
+  </Style>
+  <Style Selector="ToggleButton.strip:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOver}" />
   </Style>
 </Styles>

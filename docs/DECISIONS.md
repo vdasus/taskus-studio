@@ -61,3 +61,29 @@ copy, and the framework-dependent kind is much smaller where .NET 10 is installe
 
 `nuget.config` adds `local-packages/` next to nuget.org; the `.nupkg` files there are not committed.
 **Why:** Studio is developed before the first Taskus.Core release; CI resolves the package from nuget.org only.
+
+## 2026-11-26 Excel source: processed and failed follow folder
+
+Typing the excel source `folder` fills `processed` with `<folder>/done` and `failed` with `<folder>/failed`
+(platform separator) while those fields are empty or still hold the derived value; a value the user typed is
+kept. Loading a task file never fills them. **Why:** the user wanted these defaults in the editor; doing it on
+load would silently change files that rely on Taskus leaving the input files in place.
+
+## 2026-11-26 Secret picker on header values inserts, not replaces
+
+The secret picker next to a header value replaces the first `${secret:...}` in the value, or appends one
+(`Bearer ` + picker gives `Bearer ${secret:name}`). **Why:** API tokens usually need a prefix; Taskus resolves
+references anywhere inside a string.
+
+## 2026-11-26 Source, Map and Sink panels collapse to a title strip
+
+Each panel has a collapse toggle; a collapsed panel becomes a narrow vertical strip in place and restores its
+previous width on expand. The YAML panel keeps its toolbar toggle. Not persisted between runs. **Why:** more
+room for the panel being edited; requested by the user.
+
+## 2026-11-26 Panel widths are an editor setting
+
+The widths of the Source, Map and Sink panels are saved on window close to `panelWidths` in
+`taskus-studio.json` (pixels used as star weights) and applied at start. One layout for all task files; a
+collapsed panel saves the width it had before collapsing. **Why:** the user sets the layout once and expects
+it in every session and project.

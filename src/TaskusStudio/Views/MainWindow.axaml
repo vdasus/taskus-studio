@@ -68,7 +68,7 @@
     </Border>
 
     <Grid RowDefinitions="*,5,180">
-      <Grid ColumnDefinitions="Auto,*,5,1.3*,5,*,Auto" Margin="8,8,8,0">
+      <Grid x:Name="Panels" ColumnDefinitions="Auto,*,5,1.3*,5,*,Auto" Margin="8,8,8,0">
         <!-- Run settings -->
         <Border Classes="card" Width="320" Margin="0,0,8,0" IsVisible="{Binding ShowRunSettings}">
           <DockPanel>
@@ -85,10 +85,11 @@
 
         <!-- Source -->
         <Border Grid.Column="1" Classes="card">
-          <DockPanel>
+          <Panel>
+          <DockPanel IsVisible="{Binding !SourceCollapsed}">
             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="h1" Text="Source" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal"><ToggleButton Classes="icon" Content="◀" IsChecked="{Binding SourceCollapsed}" ToolTip.Tip="Collapse Source" Margin="0,0,6,0" /><TextBlock Classes="h1" Text="Source" VerticalAlignment="Center" /></StackPanel>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Source.Types}" SelectedItem="{Binding Source.Type, Mode=TwoWay}" MinWidth="120" />
               </Grid>
               <TextBlock Classes="muted" Text="{Binding Source.Description}" />
@@ -101,15 +102,24 @@
               </ItemsControl>
             </ScrollViewer>
           </DockPanel>
+          <ToggleButton Classes="strip" IsVisible="{Binding SourceCollapsed}" IsChecked="{Binding SourceCollapsed}"
+                        VerticalAlignment="Stretch" VerticalContentAlignment="Top" ToolTip.Tip="Expand Source">
+            <LayoutTransformControl>
+              <LayoutTransformControl.LayoutTransform><RotateTransform Angle="90" /></LayoutTransformControl.LayoutTransform>
+              <TextBlock Classes="h1" Text="Source" />
+            </LayoutTransformControl>
+          </ToggleButton>
+          </Panel>
         </Border>
-        <GridSplitter Grid.Column="2" Background="Transparent" ResizeDirection="Columns" />
+        <GridSplitter x:Name="SourceSplitter" Grid.Column="2" Background="Transparent" ResizeDirection="Columns" />
 
         <!-- Map -->
         <Border Grid.Column="3" Classes="card">
-          <DockPanel>
+          <Panel>
+          <DockPanel IsVisible="{Binding !MapCollapsed}">
             <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,10">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="h1" Text="Map" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal"><ToggleButton Classes="icon" Content="◀" IsChecked="{Binding MapCollapsed}" ToolTip.Tip="Collapse Map" Margin="0,0,6,0" /><TextBlock Classes="h1" Text="Map" VerticalAlignment="Center" /></StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                   <Button Content="+ field" Command="{Binding AddMapEntryCommand}" />
                 </StackPanel>
@@ -157,15 +167,24 @@
               </ItemsControl>
             </ScrollViewer>
           </DockPanel>
+          <ToggleButton Classes="strip" IsVisible="{Binding MapCollapsed}" IsChecked="{Binding MapCollapsed}"
+                        VerticalAlignment="Stretch" VerticalContentAlignment="Top" ToolTip.Tip="Expand Map">
+            <LayoutTransformControl>
+              <LayoutTransformControl.LayoutTransform><RotateTransform Angle="90" /></LayoutTransformControl.LayoutTransform>
+              <TextBlock Classes="h1" Text="Map" />
+            </LayoutTransformControl>
+          </ToggleButton>
+          </Panel>
         </Border>
-        <GridSplitter Grid.Column="4" Background="Transparent" ResizeDirection="Columns" />
+        <GridSplitter x:Name="SinkSplitter" Grid.Column="4" Background="Transparent" ResizeDirection="Columns" />
 
         <!-- Sink -->
         <Border Grid.Column="5" Classes="card">
-          <DockPanel>
+          <Panel>
+          <DockPanel IsVisible="{Binding !SinkCollapsed}">
             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
               <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="h1" Text="Sink" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal"><ToggleButton Classes="icon" Content="◀" IsChecked="{Binding SinkCollapsed}" ToolTip.Tip="Collapse Sink" Margin="0,0,6,0" /><TextBlock Classes="h1" Text="Sink" VerticalAlignment="Center" /></StackPanel>
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Sink.Types}" SelectedItem="{Binding Sink.Type, Mode=TwoWay}" MinWidth="120" />
               </Grid>
               <TextBlock Classes="muted" Text="{Binding Sink.Description}" />
@@ -178,6 +197,14 @@
               </ItemsControl>
             </ScrollViewer>
           </DockPanel>
+          <ToggleButton Classes="strip" IsVisible="{Binding SinkCollapsed}" IsChecked="{Binding SinkCollapsed}"
+                        VerticalAlignment="Stretch" VerticalContentAlignment="Top" ToolTip.Tip="Expand Sink">
+            <LayoutTransformControl>
+              <LayoutTransformControl.LayoutTransform><RotateTransform Angle="90" /></LayoutTransformControl.LayoutTransform>
+              <TextBlock Classes="h1" Text="Sink" />
+            </LayoutTransformControl>
+          </ToggleButton>
+          </Panel>
         </Border>
 
         <!-- YAML -->

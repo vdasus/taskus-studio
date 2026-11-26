@@ -26,6 +26,9 @@ public sealed class AppSettings
 
     public ThemeChoice Theme { get; set; } = ThemeChoice.System;
 
+    /// <summary>Relative widths of the Source, Map and Sink panels as the user left them; empty: the layout default.</summary>
+    public List<double> PanelWidths { get; set; } = [];
+
     [JsonIgnore]
     public string FilePath { get; private set; } = "";
 

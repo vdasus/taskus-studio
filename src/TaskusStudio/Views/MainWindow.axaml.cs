@@ -10,7 +10,10 @@ public sealed partial class MainWindow : Window, IDialogs
 {
     private static readonly FilePickerFileType TaskFiles = new("Task files") { Patterns = ["*.yaml", "*.yml"] };
     private static readonly FilePickerFileType ExcelFiles = new("Excel files") { Patterns = ["*.xlsx"] };
+    private static readonly int[] PanelColumns = [1, 3, 5];
+    private readonly AppSettings settings;
     private readonly MainViewModel model;
+    private readonly Dictionary<int, GridLength> widths = [];
     private bool closeConfirmed;
 
     // For the XAML previewer.
@@ -21,6 +24,13 @@ public sealed partial class MainWindow : Window, IDialogs
     public MainWindow(AppSettings settings, string? file)
     {
         InitializeComponent();
+        this.settings = settings;
+        if (settings.PanelWidths.Count == PanelColumns.Length && settings.PanelWidths.All(w => w > 0))
+        {
+            for (var i = 0; i < PanelColumns.Length; i++)
+                Panels.ColumnDefinitions[PanelColumns[i]].Width = new GridLength(settings.PanelWidths[i], GridUnitType.Star);
+        }
+
         model = new MainViewModel(settings, this);
         model.RefreshRecent();
         model.SettingsChanged += () => App.ApplyTheme(settings.Theme);
@@ -35,6 +45,43 @@ public sealed partial class MainWindow : Window, IDialogs
         };
         model.Output.CollectionChanged += (_, _) =>
             Dispatcher.UIThread.Post(() => OutputList.ScrollIntoView(model.Output.Count - 1), DispatcherPriority.Background);
+        model.PropertyChanged += (_, e) =>
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(MainViewModel.SourceCollapsed): Collapse(1, model.SourceCollapsed); break;
+                case nameof(MainViewModel.MapCollapsed): Collapse(3, model.MapCollapsed); break;
+                case nameof(MainViewModel.SinkCollapsed): Collapse(5, model.SinkCollapsed); break;
+            }
+        };
+    }
+
+    // A collapsed panel shrinks to its title strip; expanding restores the width it had, splitter drags included.
+    private void Collapse(int column, bool collapsed)
+    {
+        var definition = Panels.ColumnDefinitions[column];
+        if (collapsed)
+        {
+            widths[column] = new GridLength(definition.ActualWidth, GridUnitType.Star); // pixels as star weights, like the saved layout
+            definition.Width = GridLength.Auto;
+        }
+        else if (widths.Remove(column, out var width))
+        {
+            definition.Width = width;
+        }
+
+        SourceSplitter.IsVisible = !model.SourceCollapsed && !model.MapCollapsed;
+        SinkSplitter.IsVisible = !model.MapCollapsed && !model.SinkCollapsed;
+    }
+
+    // One layout for all task files: the widths go to the editor settings.
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        settings.PanelWidths = PanelColumns
+            .Select(c => widths.TryGetValue(c, out var collapsed) ? collapsed.Value : Panels.ColumnDefinitions[c].ActualWidth)
+            .ToList();
+        settings.Save();
     }
 
     protected override async void OnClosing(WindowClosingEventArgs e)
