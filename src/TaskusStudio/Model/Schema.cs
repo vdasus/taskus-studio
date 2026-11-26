@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Taskus;
 using Taskus.Config;
 
 namespace TaskusStudio.Model;
@@ -36,13 +37,13 @@ public static class Schema
     // Multi-line editors for SQL and request bodies.
     private static readonly HashSet<string> Multiline = ["query", "body"];
 
-    public static IReadOnlyList<string> SourceTypes => DerivedTypes(typeof(SourceOptions)).Keys.ToList();
+    public static IReadOnlyList<string> SourceTypes => Connectors.SourceTypes;
 
-    public static IReadOnlyList<string> SinkTypes => DerivedTypes(typeof(SinkOptions)).Keys.ToList();
+    public static IReadOnlyList<string> SinkTypes => Connectors.SinkTypes;
 
-    public static Type SourceType(string type) => DerivedTypes(typeof(SourceOptions))[type];
+    public static Type SourceType(string type) => Connectors.SourceOptionsType(type);
 
-    public static Type SinkType(string type) => DerivedTypes(typeof(SinkOptions))[type];
+    public static Type SinkType(string type) => Connectors.SinkOptionsType(type);
 
     public static string Describe(Type type) => type.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "";
 
@@ -112,7 +113,4 @@ public static class Schema
             enumValues,
             kind == FieldKind.Object ? type : null);
     }
-
-    private static Dictionary<string, Type> DerivedTypes(Type baseType) =>
-        baseType.GetCustomAttributes<JsonDerivedTypeAttribute>().ToDictionary(a => (string)a.TypeDiscriminator!, a => a.DerivedType);
 }

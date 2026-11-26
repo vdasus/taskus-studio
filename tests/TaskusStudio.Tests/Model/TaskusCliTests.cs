@@ -45,7 +45,7 @@ public class TaskusCliTests
     [Trait("Category", "Unit")]
     public void CoreVersion_IsReferencedTaskusCore()
     {
-        TaskusCli.CoreVersion.Should().Be("0.9");
+        TaskusCli.CoreVersion.Should().Be("0.10");
     }
 
     [Fact]
@@ -53,15 +53,15 @@ public class TaskusCliTests
     [Trait("Priority", "High")]
     public void VersionMismatch_SameMajorMinor_IsNull()
     {
-        TaskusCli.VersionMismatch("0.9.3").Should().BeNull();
-        TaskusCli.VersionMismatch("0.9.0-beta+abc").Should().BeNull();
+        TaskusCli.VersionMismatch("0.10.3").Should().BeNull();
+        TaskusCli.VersionMismatch("0.10.0-beta+abc").Should().BeNull();
     }
 
     [Fact]
     [Trait("Category", "Unit")]
     public void VersionMismatch_OtherVersion_NamesBoth()
     {
-        TaskusCli.VersionMismatch("0.7.1").Should().Contain("0.7.1").And.Contain("0.9.x");
+        TaskusCli.VersionMismatch("0.7.1").Should().Contain("0.7.1").And.Contain("0.10.x");
     }
 
     [Fact]
