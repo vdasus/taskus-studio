@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TaskusStudio.ViewModels"
+             xmlns:v="using:TaskusStudio.Views"
+             x:Class="TaskusStudio.Views.FieldView"
+             x:DataType="vm:FieldViewModel">
+  <StackPanel Spacing="3" Margin="0,0,0,12">
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock Classes="label" Text="{Binding Label}" VerticalAlignment="Center" />
+      <ComboBox Grid.Column="1" IsVisible="{Binding ExpectsSecret}" ItemsSource="{Binding SecretNames}"
+                SelectedItem="{Binding SelectedSecret}" PlaceholderText="insert secret" MinWidth="130" FontSize="12"
+                ToolTip.Tip="Insert ${secret:name}; only the names from the secrets file are shown" />
+    </Grid>
+    <TextBlock Classes="muted" Text="{Binding Description}" />
+
+    <TextBox x:Name="TextBoxInput" IsVisible="{Binding IsText}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
+             Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <TextBox x:Name="MultilineInput" IsVisible="{Binding IsMultiline}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
+             AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="90" MaxHeight="260" Classes="mono"
+             Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <CheckBox IsVisible="{Binding IsBool}" IsChecked="{Binding BoolValue}" Content="{Binding Name}" />
+    <ComboBox x:Name="EnumInput" IsVisible="{Binding IsEnum}" ItemsSource="{Binding Options}" SelectedItem="{Binding EnumChoice}"
+              PlaceholderText="{Binding Watermark}" HorizontalAlignment="Stretch" />
+
+    <StackPanel IsVisible="{Binding IsDictionary}" Spacing="4">
+      <ItemsControl ItemsSource="{Binding Entries}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:KeyValueViewModel">
+            <Grid ColumnDefinitions="*,4,2*,Auto" Margin="0,0,0,4">
+              <TextBox Text="{Binding Key}" PlaceholderText="name" />
+              <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="value" />
+              <Button Grid.Column="3" Classes="icon" Content="✕" ToolTip.Tip="Remove"
+                      Command="{Binding $parent[ItemsControl].((vm:FieldViewModel)DataContext).RemoveEntryCommand}"
+                      CommandParameter="{Binding}" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Button Content="+ add" Command="{Binding AddEntryCommand}" FontSize="12" />
+    </StackPanel>
+
+    <StackPanel IsVisible="{Binding IsObject}" Spacing="6">
+      <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding Name, StringFormat='Set {0}'}" />
+      <TextBox x:Name="ObjectInput" Text="{Binding Text}" PlaceholderText="or ${secret:name} for the whole section" FontSize="12">
+        <TextBox.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="AcceptsSecretReference" />
+            <Binding Path="!IsEnabled" />
+          </MultiBinding>
+        </TextBox.IsVisible>
+      </TextBox>
+      <Border Classes="card" IsVisible="{Binding IsEnabled}" Padding="10,10,10,0">
+        <ItemsControl ItemsSource="{Binding Nested.Fields}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:FieldViewModel">
+              <v:FieldView />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+    </StackPanel>
+
+    <TextBlock Classes="warn" Text="{Binding Warning}" IsVisible="{Binding Warning, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+  </StackPanel>
+</UserControl>

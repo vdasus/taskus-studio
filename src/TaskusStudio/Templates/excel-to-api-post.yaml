@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/vdasus/taskus/main/schema/task.schema.json
+# For every row of the .xlsx files in the input folder, calls
+#   POST https://example.com/api/clients   with body
+#   {"clientId":"K-001","name":"Jonas Jonaitis","email":"jonas.jonaitis@example.com","amount":120.5,"dueDate":"2026-10-31"}
+# Sample input: examples/clients.xlsx.
+name: api-post
+source:
+  type: excel
+  # sheet: Lapas1             # without sheet the first sheet is read, whatever its name
+  folder: C:\Taskus\in\clients
+  processed: C:\Taskus\in\clients\done
+  failed: C:\Taskus\in\clients\failed
+map:                         # the JSON body has exactly the mapped fields, under these names
+  clientId: "{{ row['Kliento Nr'] | string.strip }}"
+  name:     "{{ row.Vardas }} {{ row['Pavardė'] }}"
+  email:    "{{ row['El. paštas'] | string.downcase }}"
+  amount:   "{{ row.Suma ?? 0 }}"
+  dueDate:  "{{ row['Sąskaitos data'] | date.add_days 30 | date.to_string '%Y-%m-%d' }}"
+sink:
+  type: http
+  method: POST               # POST | PUT | PATCH send the mapped row as JSON
+  url: https://example.com/api/clients
+  headers:
+    Authorization: "Bearer ${secret:api_token}"
+  timeout: 30                # seconds per attempt, default 100
+  retry:                     # retries network errors, time-outs, 408, 429 and 5xx
+    attempts: 3              # extra attempts after the first call
+    delay: 2                 # seconds before the first retry, then doubled (with jitter)
+  rateLimit: 5               # at most 5 requests per second
+onError: continue
+report:
+  folder: C:\Taskus\reports
+  when: onError

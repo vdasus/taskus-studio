@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TaskusStudio.ViewModels"
+        x:Class="TaskusStudio.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings" Width="640" SizeToContent="Height" CanResize="False" WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <StackPanel Margin="20" Spacing="14">
+    <TextBlock Classes="h1" Text="Settings" />
+    <StackPanel Spacing="4">
+      <TextBlock Classes="label" Text="taskus executable" />
+      <TextBlock Classes="muted" Text="Used by Validate and Dry run. Its version should match this Studio's major.minor." />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Text="{Binding TaskusPath}" PlaceholderText="path to taskus.exe or taskus" />
+        <Button x:Name="BrowseTaskus" Grid.Column="1" Content="Browse..." Margin="6,0,0,0" />
+      </Grid>
+    </StackPanel>
+    <StackPanel Spacing="4">
+      <TextBlock Classes="label" Text="Secrets file" />
+      <TextBlock Classes="muted" Text="The plain name (secrets.yaml); its protected copy secrets.sec is found from it. Studio reads only the names for the picker and uses the values in memory for validation. Empty: secrets.yaml next to taskus." />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Text="{Binding SecretsPath}" PlaceholderText="secrets.yaml next to taskus" />
+        <Button x:Name="BrowseSecrets" Grid.Column="1" Content="Browse..." Margin="6,0,0,0" />
+      </Grid>
+    </StackPanel>
+    <StackPanel Spacing="4">
+      <TextBlock Classes="label" Text="Theme" />
+      <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="160" />
+    </StackPanel>
+    <TextBlock Classes="muted" Text="{Binding FilePath, StringFormat='Settings file: {0}'}" />
+    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+      <Button x:Name="OkButton" Content="OK" Classes="accent" MinWidth="90" />
+      <Button x:Name="CancelButton" Content="Cancel" MinWidth="90" />
+    </StackPanel>
+  </StackPanel>
+</Window>

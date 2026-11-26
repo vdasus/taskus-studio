@@ -1,0 +1,53 @@
+name: Release
+
+# Push a tag like v0.8.0 to test, build and publish that version as a GitHub release.
+# The tag sets the version; 0.x and pre-release versions (v1.0.0-rc.1) are marked as pre-release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # create the GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false   # the tests run package code; keep the write token out of .git/config
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Test
+        run: dotnet test -c Release
+      - name: Build
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          # Single-file builds, cross-published from Linux.
+          # self-contained: runs without .NET; framework-dependent: needs the .NET 10 runtime, much smaller.
+          for RID in win-x64 linux-x64 osx-arm64; do
+            for KIND in self-contained framework-dependent; do
+              NAME=taskus-studio-$VERSION-$RID-$KIND
+              SELF=$([ $KIND = self-contained ] && echo true || echo false)
+              dotnet publish src/TaskusStudio -c Release -r $RID --self-contained $SELF -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$VERSION -o publish/$RID-$KIND
+              mkdir -p release/$NAME
+              cp -r publish/$RID-$KIND/. release/$NAME/
+              rm -f release/$NAME/*.pdb
+              cp README.md LICENSE release/$NAME/
+              (cd release && zip -qr $NAME.zip $NAME && sha256sum $NAME.zip > $NAME.zip.sha256)
+            done
+          done
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          case "$VERSION" in
+            0.*|*-*) PRERELEASE=--prerelease ;;
+            *) PRERELEASE= ;;
+          esac
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+          gh release create "$GITHUB_REF_NAME" release/*.zip release/*.sha256 \
+            --verify-tag $PRERELEASE --title "Taskus Studio $VERSION" --generate-notes \
+            --notes "Single-file builds for Windows x64, Linux x64 and macOS arm64 in two kinds: self-contained (runs without .NET) or framework-dependent (much smaller; needs the .NET 10 Desktop runtime on Windows or the .NET 10 runtime on Linux and macOS). Unpack a zip and run taskus-studio. Works with Taskus $MAJOR_MINOR.*. macOS builds are not signed; see README.md."

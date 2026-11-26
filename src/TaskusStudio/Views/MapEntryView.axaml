@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TaskusStudio.ViewModels"
+             xmlns:v="using:TaskusStudio.Views"
+             x:Class="TaskusStudio.Views.MapEntryView"
+             x:DataType="vm:MapEntryViewModel">
+  <Border Classes="card" Padding="8" Margin="0,0,0,6">
+    <StackPanel Spacing="4">
+      <Grid ColumnDefinitions="2*,6,5*,Auto">
+        <TextBox x:Name="FieldInput" Text="{Binding Field}" PlaceholderText="target field" VerticalAlignment="Top"
+                 Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <v:TemplateEditor x:Name="TemplateInput" Grid.Column="2" Text="{Binding Template}"
+                          Columns="{Binding $parent[Window].((vm:MainViewModel)DataContext).Columns}" />
+        <Button Grid.Column="3" Classes="icon" Content="✕" VerticalAlignment="Top" ToolTip.Tip="Remove this field"
+                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).RemoveMapEntryCommand}" CommandParameter="{Binding}" />
+      </Grid>
+      <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Preview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="=" Classes="muted" />
+        <SelectableTextBlock Classes="mono" FontSize="12" Text="{Binding Preview}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource OkBrush}" IsVisible="{Binding !PreviewFailed}" />
+        <SelectableTextBlock Classes="mono" FontSize="12" Text="{Binding Preview}" TextWrapping="Wrap"
+                             Foreground="{DynamicResource ErrorBrush}" IsVisible="{Binding PreviewFailed}" />
+      </StackPanel>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    </StackPanel>
+  </Border>
+</UserControl>

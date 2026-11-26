@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>taskus-studio</AssemblyName>
+    <RootNamespace>TaskusStudio</RootNamespace>
+    <Version>0.8.0</Version>
+    <Authors>vdasus</Authors>
+    <Copyright>Copyright (C) 2026 vdasus</Copyright>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TaskusStudio.Tests" />
+    <AvaloniaResource Include="Assets/**" />
+    <EmbeddedResource Include="Templates/*.yaml" LogicalName="Templates/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Model/Scriban.xshd" LogicalName="Scriban.xshd" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Taskus.Core" />
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="System.IO.Abstractions" />
+  </ItemGroup>
+
+</Project>

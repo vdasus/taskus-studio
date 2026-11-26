@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="Scriban" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <!-- Mid-tone colors that read on light and dark backgrounds. -->
+  <Color name="Delimiter" foreground="#A855F7" fontWeight="bold" />
+  <Color name="String" foreground="#EA580C" />
+  <Color name="Keyword" foreground="#3B82F6" />
+  <Color name="Row" foreground="#0D9488" fontWeight="bold" />
+  <Color name="Number" foreground="#16A34A" />
+  <Color name="Function" foreground="#CA8A04" />
+  <RuleSet>
+    <Span ruleSet="Code" multiline="true">
+      <Begin color="Delimiter">\{\{-?</Begin>
+      <End color="Delimiter">-?\}\}</End>
+    </Span>
+  </RuleSet>
+  <RuleSet name="Code">
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+    <Span color="String">
+      <Begin>'</Begin>
+      <End>'</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+    <Keywords color="Keyword">
+      <Word>if</Word>
+      <Word>else</Word>
+      <Word>end</Word>
+      <Word>for</Word>
+      <Word>in</Word>
+      <Word>while</Word>
+      <Word>func</Word>
+      <Word>ret</Word>
+      <Word>true</Word>
+      <Word>false</Word>
+      <Word>null</Word>
+      <Word>empty</Word>
+    </Keywords>
+    <Keywords color="Row">
+      <Word>row</Word>
+    </Keywords>
+    <Rule color="Function">\b(string|date|math|array|object|html|regex|timespan)\.[a-z_]+</Rule>
+    <Rule color="Number">\b\d+(\.\d+)?\b</Rule>
+  </RuleSet>
+</SyntaxDefinition>

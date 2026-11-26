@@ -1,0 +1,242 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TaskusStudio.ViewModels"
+        xmlns:v="using:TaskusStudio.Views"
+        xmlns:m="using:TaskusStudio.Model"
+        x:Class="TaskusStudio.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding Title}" Width="1440" Height="900" MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource PanelBrush}">
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding NewCommand}" />
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+    <KeyBinding Gesture="F5" Command="{Binding DryRunCommand}" />
+    <KeyBinding Gesture="F6" Command="{Binding ValidateWithTaskusCommand}" />
+  </Window.KeyBindings>
+
+  <DockPanel>
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Padding="10,8" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource CardBorderBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Content="New" Command="{Binding NewCommand}" ToolTip.Tip="New task from a template (Ctrl+N)" />
+          <Button Content="Open" Command="{Binding OpenCommand}" ToolTip.Tip="Open a task file (Ctrl+O)" />
+          <DropDownButton Content="Recent">
+            <DropDownButton.Flyout>
+              <MenuFlyout ItemsSource="{Binding RecentFiles}">
+                <MenuFlyout.ItemContainerTheme>
+                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="x:String">
+                    <Setter Property="Header" Value="{Binding}" />
+                    <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainViewModel)DataContext).OpenRecentCommand}" />
+                    <Setter Property="CommandParameter" Value="{Binding}" />
+                  </ControlTheme>
+                </MenuFlyout.ItemContainerTheme>
+              </MenuFlyout>
+            </DropDownButton.Flyout>
+          </DropDownButton>
+          <Button Content="Save" Command="{Binding SaveCommand}" ToolTip.Tip="Ctrl+S" Classes="accent" />
+          <Button Content="Save as" Command="{Binding SaveAsCommand}" ToolTip.Tip="Ctrl+Shift+S" />
+          <Rectangle Width="1" Margin="6,2" Fill="{DynamicResource CardBorderBrush}" />
+          <Button Content="Validate" Command="{Binding ValidateWithTaskusCommand}" ToolTip.Tip="taskus validate (F6)" IsEnabled="{Binding !IsRunning}" />
+          <Button Content="Dry run" Command="{Binding DryRunCommand}" ToolTip.Tip="taskus run --dry-run: reads and maps, writes nothing (F5)" IsEnabled="{Binding !IsRunning}" />
+          <Button Content="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+          <ToggleButton Content="Run settings" IsChecked="{Binding ShowRunSettings}" ToolTip.Tip="name, onError, maxErrors, report, smtp, logExclude" />
+          <ToggleButton Content="YAML" IsChecked="{Binding ShowYaml}" />
+          <Button Content="Settings" Command="{Binding EditSettingsCommand}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Warning about the opened file -->
+    <Border DockPanel.Dock="Top" Background="{DynamicResource BannerBrush}" Padding="12,6"
+            IsVisible="{Binding FileWarning, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding FileWarning}" TextWrapping="Wrap" />
+    </Border>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Padding="10,4" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource CardBorderBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Text="●" Foreground="{DynamicResource OkBrush}" IsVisible="{Binding IsValid}" Margin="0,0,6,0" />
+        <TextBlock Text="●" Foreground="{DynamicResource ErrorBrush}" IsVisible="{Binding !IsValid}" Margin="0,0,6,0" />
+        <TextBlock Grid.Column="1" Classes="muted" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Grid.Column="2" Classes="muted" Text="{Binding SecretsStatus}" TextTrimming="CharacterEllipsis" MaxWidth="600" />
+      </Grid>
+    </Border>
+
+    <Grid RowDefinitions="*,5,180">
+      <Grid ColumnDefinitions="Auto,*,5,1.3*,5,*,Auto" Margin="8,8,8,0">
+        <!-- Run settings -->
+        <Border Classes="card" Width="320" Margin="0,0,8,0" IsVisible="{Binding ShowRunSettings}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Classes="h1" Text="Run settings" Margin="0,0,0,8" />
+            <ScrollViewer>
+              <ItemsControl ItemsSource="{Binding Run.Fields}" Margin="0,0,10,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FieldViewModel"><v:FieldView /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+
+        <!-- Source -->
+        <Border Grid.Column="1" Classes="card">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="h1" Text="Source" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Source.Types}" SelectedItem="{Binding Source.Type}" MinWidth="120" />
+              </Grid>
+              <TextBlock Classes="muted" Text="{Binding Source.Description}" />
+            </StackPanel>
+            <ScrollViewer>
+              <ItemsControl ItemsSource="{Binding Source.Fields}" Margin="0,0,10,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FieldViewModel"><v:FieldView /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+        <GridSplitter Grid.Column="2" Background="Transparent" ResizeDirection="Columns" />
+
+        <!-- Map -->
+        <Border Grid.Column="3" Classes="card">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="h1" Text="Map" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                  <Button Content="+ field" Command="{Binding AddMapEntryCommand}" />
+                </StackPanel>
+              </Grid>
+              <TextBlock Classes="muted" Text="Target field name and a Scriban template over row. A single {{ expression }} keeps its type. No fields: rows pass through unchanged. Type row. or press Ctrl+Space for the source columns." />
+
+              <!-- Preview data -->
+              <Border Classes="card" Padding="8" IsVisible="{Binding IsExcelSource}">
+                <StackPanel Spacing="6">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Text="Sample file" VerticalAlignment="Center" Margin="0,0,8,0" Classes="label" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding PreviewFiles}" SelectedItem="{Binding SelectedPreviewFile}"
+                              HorizontalAlignment="Stretch" PlaceholderText="no sample file" />
+                    <Button Grid.Column="2" Content="Browse..." Margin="6,0,0,0" Command="{Binding BrowsePreviewFileCommand}" />
+                  </Grid>
+                  <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasPreview}">
+                    <Button Classes="icon" Content="◀" Command="{Binding PreviousRowCommand}" ToolTip.Tip="Previous row" />
+                    <TextBlock Text="{Binding RowLabel}" VerticalAlignment="Center" />
+                    <Button Classes="icon" Content="▶" Command="{Binding NextRowCommand}" ToolTip.Tip="Next row" />
+                    <Button Content="Add all columns" Command="{Binding AddAllColumnsCommand}" FontSize="12" Margin="12,0,0,0" />
+                  </StackPanel>
+                  <ItemsControl ItemsSource="{Binding PreviewRow}" IsVisible="{Binding HasPreview}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="m:PreviewCell">
+                        <Button Classes="chip" Content="{Binding Column}" ToolTip.Tip="{Binding Value}"
+                                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).AddColumnCommand}"
+                                CommandParameter="{Binding Column}" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock Classes="muted" Text="Click a column to map it; hover to see its value in this row." IsVisible="{Binding HasPreview}" />
+                  <TextBlock Classes="warn" Text="{Binding PreviewStatus}" IsVisible="{Binding PreviewStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </StackPanel>
+              </Border>
+              <TextBlock Classes="muted" Text="{Binding PreviewStatus}" IsVisible="{Binding !IsExcelSource}" />
+            </StackPanel>
+            <ScrollViewer>
+              <ItemsControl ItemsSource="{Binding MapEntries}" Margin="0,0,10,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MapEntryViewModel"><v:MapEntryView /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+        <GridSplitter Grid.Column="4" Background="Transparent" ResizeDirection="Columns" />
+
+        <!-- Sink -->
+        <Border Grid.Column="5" Classes="card">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="h1" Text="Sink" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Sink.Types}" SelectedItem="{Binding Sink.Type}" MinWidth="120" />
+              </Grid>
+              <TextBlock Classes="muted" Text="{Binding Sink.Description}" />
+            </StackPanel>
+            <ScrollViewer>
+              <ItemsControl ItemsSource="{Binding Sink.Fields}" Margin="0,0,10,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FieldViewModel"><v:FieldView /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+
+        <!-- YAML -->
+        <Border Grid.Column="6" Classes="card" Width="380" Margin="8,0,0,0" IsVisible="{Binding ShowYaml}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Classes="h1" Text="YAML" Margin="0,0,0,8" />
+            <TextBox Classes="mono" FontSize="12" Text="{Binding YamlText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" />
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <GridSplitter Grid.Row="1" Background="Transparent" ResizeDirection="Rows" />
+
+      <!-- Problems and output -->
+      <Border Grid.Row="2" Classes="card" Margin="8,0,8,8" Padding="6">
+        <TabControl SelectedIndex="{Binding BottomTab}" Padding="0">
+          <TabItem Header="{Binding ProblemsHeader}" FontSize="14">
+            <Grid>
+              <TextBlock Classes="muted" Text="No problems: taskus accepts this task." Margin="8" IsVisible="{Binding IsValid}" />
+              <ListBox ItemsSource="{Binding Problems}" x:Name="ProblemList" Background="Transparent">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="m:Problem">
+                    <TextBlock Text="{Binding}" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
+          </TabItem>
+          <TabItem Header="Output" FontSize="14">
+            <ListBox ItemsSource="{Binding Output}" x:Name="OutputList" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="m:OutputLine">
+                  <Panel>
+                    <SelectableTextBlock Classes="mono" FontSize="12" Text="{Binding Text}" TextWrapping="Wrap">
+                      <SelectableTextBlock.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                          <Binding Path="!IsError" />
+                          <Binding Path="!IsWarning" />
+                        </MultiBinding>
+                      </SelectableTextBlock.IsVisible>
+                    </SelectableTextBlock>
+                    <SelectableTextBlock Classes="mono" FontSize="12" Text="{Binding Text}" TextWrapping="Wrap"
+                                         Foreground="{DynamicResource WarnBrush}">
+                      <SelectableTextBlock.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                          <Binding Path="!IsError" />
+                          <Binding Path="IsWarning" />
+                        </MultiBinding>
+                      </SelectableTextBlock.IsVisible>
+                    </SelectableTextBlock>
+                    <SelectableTextBlock Classes="mono" FontSize="12" Text="{Binding Text}" TextWrapping="Wrap"
+                                         Foreground="{DynamicResource ErrorBrush}" IsVisible="{Binding IsError}" />
+                  </Panel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </TabItem>
+        </TabControl>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>
