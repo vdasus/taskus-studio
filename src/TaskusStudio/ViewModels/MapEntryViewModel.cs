@@ -3,19 +3,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace TaskusStudio.ViewModels;
 
 /// <summary>One line of the map: target field name, Scriban template, and the value it gives for the preview row.</summary>
-public sealed partial class MapEntryViewModel : ObservableObject
+public sealed partial class MapEntryViewModel(Action changed, string field = "", string template = "")
+    : ObservableObject
 {
-    private readonly Action changed;
-
-    public MapEntryViewModel(Action changed, string field = "", string template = "")
-    {
-        this.changed = changed;
-        this.field = field;
-        this.template = template;
-    }
-
-    [ObservableProperty] private string field;
-    [ObservableProperty] private string template;
+    [ObservableProperty] private string field = field;
+    [ObservableProperty] private string template = template;
     [ObservableProperty] private string preview = "";
     [ObservableProperty] private bool previewFailed;
     [ObservableProperty] private string? error;
