@@ -164,6 +164,24 @@ public class FieldTests
 
     [Fact]
     [Trait("Category", "Unit")]
+    [Trait("Priority", "High")]
+    public void HttpSinkBody_IsAMultilineTemplateOverTheMappedRow()
+    {
+        var doc = TestData.NewDocument();
+        doc.Sink.Type = "http";
+        doc.AddColumn("id");
+        var body = doc.Sink.Field("body")!;
+
+        body.Text = "{\"data\": {\"id\": {{ row.id }}}}";
+
+        body.IsMultilineTemplate.Should().BeTrue();
+        body.TemplateColumns.Should().Equal("id");
+        doc.YamlText.Should().Contain("body:");
+        doc.Problems.Should().NotContain(p => p.Path == "sink.body");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
     public void TemplateHint_NamesColumnCompletion_OnlyWhenThereAreColumns()
     {
         var doc = TestData.NewDocument();

@@ -142,6 +142,7 @@ public sealed class TemplateEditor : UserControl
         ("math.round", "math.round 2", "Rounds a number"),
         ("math.format", "math.format '0.00'", "Formats a number"),
         ("object.default", "object.default ''", "Value to use when empty"),
+        ("object.to_json", "object.to_json", "Quoted, escaped JSON value (for a JSON body)"),
         ("array.join", "array.join ','", "Joins a list"),
     ];
 

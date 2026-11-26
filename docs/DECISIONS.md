@@ -87,3 +87,10 @@ The widths of the Source, Map and Sink panels are saved on window close to `pane
 `taskus-studio.json` (pixels used as star weights) and applied at start. One layout for all task files; a
 collapsed panel saves the width it had before collapsing. **Why:** the user sets the layout once and expects
 it in every session and project.
+
+## 2026-11-26 Custom JSON body for the http sink lives in Taskus
+
+`sink.body` (Taskus 0.9) is a template over the mapped row that replaces the default body (the mapped row as a
+JSON object); the rendered text must be valid JSON. Studio shows it from the Taskus.Core schema as a multi-line
+template and offers `object.to_json` after `|`. **Why:** nested JSON such as `{"data":{"id":1}}` cannot come from
+a flat map; a new key is a schema change, so Taskus and Studio move to 0.9.
