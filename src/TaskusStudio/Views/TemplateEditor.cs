@@ -102,13 +102,53 @@ public sealed class TemplateEditor : UserControl
             ShowCompletion(offset - 1, column => Preview.ColumnAccess(column)[3..]); // ".Name" or "['Name']" in place of the dot
         else if (e.Text == "[" && before.EndsWith("row[", StringComparison.Ordinal))
             ShowCompletion(offset - 1, column => $"['{column.Replace("'", "\\'")}']");
+        else if (e.Text == "|" && InsideCode(before))
+            ShowFilters(offset);
+    }
+
+    // Common Scriban functions for a pipe: "{{ row.Name | html.url_encode }}".
+    internal static readonly IReadOnlyList<(string Name, string Insert, string Help)> Filters =
+    [
+        ("html.url_encode", "html.url_encode", "Encodes text for a URL"),
+        ("html.escape", "html.escape", "Escapes HTML characters"),
+        ("string.strip", "string.strip", "Removes leading and trailing spaces"),
+        ("string.downcase", "string.downcase", "Lower case"),
+        ("string.upcase", "string.upcase", "Upper case"),
+        ("string.capitalize", "string.capitalize", "First letter upper case"),
+        ("string.replace", "string.replace \"old\" \"new\"", "Replaces text"),
+        ("string.truncate", "string.truncate 20", "Cuts to a length"),
+        ("string.pad_left", "string.pad_left 10", "Pads on the left to a width"),
+        ("date.to_string", "date.to_string '%Y-%m-%d'", "Formats a date"),
+        ("date.add_days", "date.add_days 1", "Adds days to a date"),
+        ("math.round", "math.round 2", "Rounds a number"),
+        ("math.format", "math.format '0.00'", "Formats a number"),
+        ("object.default", "object.default ''", "Value to use when empty"),
+        ("array.join", "array.join ','", "Joins a list"),
+    ];
+
+    private static bool InsideCode(string before) =>
+        before.LastIndexOf("{{", StringComparison.Ordinal) > before.LastIndexOf("}}", StringComparison.Ordinal);
+
+    private void ShowFilters(int start)
+    {
+        completion = new CompletionWindow(editor.TextArea) { StartOffset = start };
+        foreach (var (name, insert, help) in Filters)
+            completion.CompletionList.CompletionData.Add(new ColumnCompletion(name, " " + insert + " ", help));
+        completion.Show();
+        completion.Closed += (_, _) => completion = null;
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space && e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
-            ShowCompletion(editor.CaretOffset, Preview.ColumnAccess);
+            var before = editor.Document.GetText(0, editor.CaretOffset);
+            if (before.TrimEnd().EndsWith('|') && InsideCode(before))
+                ShowFilters(editor.CaretOffset);
+            else if (InsideCode(before))
+                ShowCompletion(editor.CaretOffset, Preview.ColumnAccess);
+            else
+                ShowCompletion(editor.CaretOffset, Preview.ColumnTemplate); // outside {{ }}: a whole {{ row.X }}
             e.Handled = true;
         }
     }
@@ -119,12 +159,12 @@ public sealed class TemplateEditor : UserControl
             return;
         completion = new CompletionWindow(editor.TextArea) { StartOffset = start };
         foreach (var column in Columns)
-            completion.CompletionList.CompletionData.Add(new ColumnCompletion(column, insert(column)));
+            completion.CompletionList.CompletionData.Add(new ColumnCompletion(column, insert(column), $"Inserts {insert(column)}"));
         completion.Show();
         completion.Closed += (_, _) => completion = null;
     }
 
-    private sealed class ColumnCompletion(string column, string insert) : ICompletionData
+    private sealed class ColumnCompletion(string column, string insert, string description) : ICompletionData
     {
         public IImage? Image => null;
 
@@ -132,7 +172,7 @@ public sealed class TemplateEditor : UserControl
 
         public object Content => column;
 
-        public object Description => $"Inserts {insert}";
+        public object Description => description;
 
         public double Priority => 0;
 

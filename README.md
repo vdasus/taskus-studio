@@ -8,7 +8,7 @@ Studio creates new task files and opens existing ones, validates them as you typ
 
 ## Status
 
-Version 0.8.0, the first working version.
+Version 0.8.1. Works with Taskus 0.8.x.
 
 ## Features
 
@@ -16,6 +16,10 @@ Version 0.8.0, the first working version.
   are in a separate Run settings panel, and a live YAML preview slides out on the right.
 - Live validation through `Taskus.Core`: errors show at the field and as a list in the bottom panel.
 - Mapping preview on rows of an `.xlsx` source.
+- Template editor with Scriban highlighting for the map and for template settings (http url and body, excel
+  file name). Completion: `row.` or Ctrl+Space lists the fields (source columns in the map, mapped fields in
+  the sink), `|` lists common functions such as `html.url_encode`, `string.strip`, `date.to_string`.
+- The smtp section can be one `${secret:name}` mapping chosen from the secret picker.
 - Secret picker that lists only the key names from the secrets file and inserts `${secret:name}`; values
   are never shown.
 - Validate and Dry run through the `taskus` CLI, with its console output in the bottom panel.

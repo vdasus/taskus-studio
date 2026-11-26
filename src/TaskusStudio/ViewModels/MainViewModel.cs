@@ -120,6 +120,11 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshMapPreview();
         foreach (var field in Source.AllFields.Concat(Sink.AllFields).Concat(Run.AllFields))
             field.SecretNames = SecretNames;
+        // Sink templates see the mapped row; without a map, the source row passes through.
+        var mapped = MapEntries.Select(e => e.Field.Trim()).Where(f => f.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        IReadOnlyList<string> sinkColumns = mapped.Count > 0 ? mapped : Columns.ToList();
+        foreach (var field in Sink.AllFields.Where(f => f.IsTemplate))
+            field.TemplateColumns = sinkColumns;
     }
 
     public YamlMappingNode ToYaml()
@@ -384,6 +389,8 @@ public sealed partial class MainViewModel : ObservableObject
             Columns.Add(column);
         if (RowIndex >= previewRows.Count)
             RowIndex = Math.Max(0, previewRows.Count - 1);
+        foreach (var field in Sink.AllFields.Where(f => f.IsTemplate && MapEntries.All(e => e.Field.Trim().Length == 0)))
+            field.TemplateColumns = Columns.ToList();
         OnPropertyChanged(nameof(HasPreview));
         OnPropertyChanged(nameof(RowLabel));
         OnPropertyChanged(nameof(PreviewRow));

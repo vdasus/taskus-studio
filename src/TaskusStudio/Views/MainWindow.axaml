@@ -89,7 +89,7 @@
             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Classes="h1" Text="Source" VerticalAlignment="Center" />
-                <ComboBox Grid.Column="1" ItemsSource="{Binding Source.Types}" SelectedItem="{Binding Source.Type}" MinWidth="120" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Source.Types}" SelectedItem="{Binding Source.Type, Mode=TwoWay}" MinWidth="120" />
               </Grid>
               <TextBlock Classes="muted" Text="{Binding Source.Description}" />
             </StackPanel>
@@ -114,14 +114,14 @@
                   <Button Content="+ field" Command="{Binding AddMapEntryCommand}" />
                 </StackPanel>
               </Grid>
-              <TextBlock Classes="muted" Text="Target field name and a Scriban template over row. A single {{ expression }} keeps its type. No fields: rows pass through unchanged. Type row. or press Ctrl+Space for the source columns." />
+              <TextBlock Classes="muted" Text="Target field name and a Scriban template over row. A single {{ expression }} keeps its type. No fields: rows pass through unchanged. Type row. or press Ctrl+Space for the source columns, | for functions such as html.url_encode." />
 
               <!-- Preview data -->
               <Border Classes="card" Padding="8" IsVisible="{Binding IsExcelSource}">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Text="Sample file" VerticalAlignment="Center" Margin="0,0,8,0" Classes="label" />
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding PreviewFiles}" SelectedItem="{Binding SelectedPreviewFile}"
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding PreviewFiles}" SelectedItem="{Binding SelectedPreviewFile, Mode=TwoWay}"
                               HorizontalAlignment="Stretch" PlaceholderText="no sample file" />
                     <Button Grid.Column="2" Content="Browse..." Margin="6,0,0,0" Command="{Binding BrowsePreviewFileCommand}" />
                   </Grid>
@@ -166,7 +166,7 @@
             <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
               <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Classes="h1" Text="Sink" VerticalAlignment="Center" />
-                <ComboBox Grid.Column="1" ItemsSource="{Binding Sink.Types}" SelectedItem="{Binding Sink.Type}" MinWidth="120" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Sink.Types}" SelectedItem="{Binding Sink.Type, Mode=TwoWay}" MinWidth="120" />
               </Grid>
               <TextBlock Classes="muted" Text="{Binding Sink.Description}" />
             </StackPanel>

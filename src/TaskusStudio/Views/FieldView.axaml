@@ -8,18 +8,20 @@
     <Grid ColumnDefinitions="*,Auto">
       <TextBlock Classes="label" Text="{Binding Label}" VerticalAlignment="Center" />
       <ComboBox Grid.Column="1" IsVisible="{Binding ExpectsSecret}" ItemsSource="{Binding SecretNames}"
-                SelectedItem="{Binding SelectedSecret}" PlaceholderText="insert secret" MinWidth="130" FontSize="12"
+                SelectedItem="{Binding SelectedSecret, Mode=TwoWay}" PlaceholderText="insert secret" MinWidth="130" FontSize="12"
                 ToolTip.Tip="Insert ${secret:name}; only the names from the secrets file are shown" />
     </Grid>
     <TextBlock Classes="muted" Text="{Binding Description}" />
 
     <TextBox x:Name="TextBoxInput" IsVisible="{Binding IsText}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
              Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <v:TemplateEditor x:Name="TemplateInput" IsVisible="{Binding IsTemplate}" Text="{Binding Text, Mode=TwoWay}"
+                      Columns="{Binding TemplateColumns}" />
     <TextBox x:Name="MultilineInput" IsVisible="{Binding IsMultiline}" Text="{Binding Text}" PlaceholderText="{Binding Watermark}"
              AcceptsReturn="True" TextWrapping="NoWrap" MinHeight="90" MaxHeight="260" Classes="mono"
              Classes.invalid="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
     <CheckBox IsVisible="{Binding IsBool}" IsChecked="{Binding BoolValue}" Content="{Binding Name}" />
-    <ComboBox x:Name="EnumInput" IsVisible="{Binding IsEnum}" ItemsSource="{Binding Options}" SelectedItem="{Binding EnumChoice}"
+    <ComboBox x:Name="EnumInput" IsVisible="{Binding IsEnum}" ItemsSource="{Binding Options}" SelectedItem="{Binding EnumChoice, Mode=TwoWay}"
               PlaceholderText="{Binding Watermark}" HorizontalAlignment="Stretch" />
 
     <StackPanel IsVisible="{Binding IsDictionary}" Spacing="4">

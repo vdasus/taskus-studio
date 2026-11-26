@@ -28,6 +28,12 @@ public sealed partial class FieldView : UserControl
             return;
         field.IsFocusRequested = false;
         this.BringIntoView();
+        if (field.IsTemplate)
+        {
+            TemplateInput.FocusEditor();
+            return;
+        }
+
         Control target = field.IsMultiline ? MultilineInput : field.IsEnum ? EnumInput : field.IsObject ? ObjectInput : TextBoxInput;
         target.Focus();
     }

@@ -46,9 +46,11 @@ public sealed partial class FieldViewModel : ObservableObject
 
     public string Watermark => Spec.DefaultText is { Length: > 0 } d ? $"default: {d}" : Spec.Required ? "required" : "";
 
-    public bool IsText => Spec.Kind is FieldKind.Text or FieldKind.Integer or FieldKind.Number or FieldKind.List;
+    public bool IsTemplate => Spec.IsTemplate;
 
-    public bool IsMultiline => Spec.Kind == FieldKind.MultilineText;
+    public bool IsText => !IsTemplate && Spec.Kind is FieldKind.Text or FieldKind.Integer or FieldKind.Number or FieldKind.List;
+
+    public bool IsMultiline => !IsTemplate && Spec.Kind == FieldKind.MultilineText;
 
     public bool IsBool => Spec.Kind == FieldKind.Bool;
 
@@ -71,12 +73,22 @@ public sealed partial class FieldViewModel : ObservableObject
     public string EnumChoice
     {
         get => Text.Length == 0 ? DEFAULT_CHOICE : Text;
-        set => Text = value is null or DEFAULT_CHOICE ? "" : value;
+        set
+        {
+            // The hidden enum box of a non-enum field, and any box that loses its item, writes null: ignore it.
+            if (!IsEnum || value is null)
+                return;
+            Text = value == DEFAULT_CHOICE ? "" : value;
+        }
     }
 
     public SectionViewModel? Nested { get; }
 
     public ObservableCollection<KeyValueViewModel> Entries { get; } = [];
+
+    /// <summary>Fields of the row a template sees, for completion; set by the document.</summary>
+    public IReadOnlyList<string> TemplateColumns { get => templateColumns; set => SetProperty(ref templateColumns, value); }
+    private IReadOnlyList<string> templateColumns = [];
 
     /// <summary>Secret names for the picker, set by the document.</summary>
     public IReadOnlyList<string> SecretNames { get => secretNames; set => SetProperty(ref secretNames, value); }
@@ -93,30 +105,39 @@ public sealed partial class FieldViewModel : ObservableObject
         ? "Keep this value in the secrets file and write ${secret:name} here."
         : null;
 
+    /// <summary>The secret named by the whole value, shown in the picker; choosing one writes ${secret:name}.</summary>
     public string? SelectedSecret
     {
-        get => null;
+        get => SecretReference().Match(Text) is { Success: true } m ? m.Groups[1].Value : null;
         set
         {
-            if (value is null)
+            if (value is null || value == SelectedSecret)
                 return;
-            Text = $"${{secret:{value}}}";
             if (IsObject)
-                IsEnabled = true;
-            OnPropertyChanged();
+                IsEnabled = false; // the secret replaces the whole section
+            Text = $"${{secret:{value}}}";
         }
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^\$\{secret:([^}]+)\}$")]
+    private static partial System.Text.RegularExpressions.Regex SecretReference();
 
     partial void OnTextChanged(string value)
     {
         OnPropertyChanged(nameof(Warning));
         OnPropertyChanged(nameof(EnumChoice));
+        OnPropertyChanged(nameof(SelectedSecret));
         Changed();
     }
 
     partial void OnBoolValueChanged(bool value) => Changed();
 
-    partial void OnIsEnabledChanged(bool value) => Changed();
+    partial void OnIsEnabledChanged(bool value)
+    {
+        if (value && IsObject)
+            Text = ""; // own settings instead of a secret reference
+        Changed();
+    }
 
     [RelayCommand]
     private void AddEntry() => Entries.Add(new KeyValueViewModel());

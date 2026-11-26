@@ -22,6 +22,9 @@ public sealed record FieldSpec(
     /// <summary>Connection strings and passwords: the model says "Usually ${secret:name}".</summary>
     public bool ExpectsSecret => Description.Contains("${secret:", StringComparison.Ordinal);
 
+    /// <summary>A Scriban template (urls, bodies, file names): edited with highlighting and completion.</summary>
+    public bool IsTemplate => Kind is FieldKind.Text or FieldKind.MultilineText && Description.Contains("template", StringComparison.OrdinalIgnoreCase);
+
     public IReadOnlyList<FieldSpec> Children => ObjectType is null ? [] : Schema.Fields(ObjectType);
 }
 
