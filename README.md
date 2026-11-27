@@ -6,7 +6,7 @@ Studio creates new task files and opens existing ones, validates them as you typ
 `taskus` CLI uses, and shows the mapping result on real data. It runs on Windows, Linux and macOS
 (Avalonia 12, .NET 10).
 
-![Taskus Studio: editor, mapping preview, validation, run settings, dark theme](docs/images/demo.gif)
+![Taskus Studio: editor, mapping preview, collapsed panel, column and function completion, validation, run settings, dark theme](docs/images/demo.gif)
 
 ## Status
 

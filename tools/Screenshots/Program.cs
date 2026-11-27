@@ -1,6 +1,13 @@
+using System.Reflection;
 using Avalonia;
+using Avalonia.Controls.Primitives;
+using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.Headless;
+using AvaloniaEdit.CodeCompletion;
+using AvaloniaEdit.Editing;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using TaskusStudio;
 using TaskusStudio.Model;
 using TaskusStudio.ViewModels;
@@ -27,37 +34,86 @@ AppBuilder.Configure<App>()
     .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
     .WithInterFont()
     .SetupWithoutStarting();
+// Headless popups are separate top levels that a window capture misses; the overlay layer puts the completion list in the frame.
+// The overlay host has no background of its own, so the list gets the one a popup window would give it.
+Popup.ShouldUseOverlayLayerProperty.OverrideDefaultValue<CompletionWindowBase>(true);
+Application.Current!.Styles.Add(new Style(x => x.OfType<CompletionList>())
+{
+    Setters =
+    {
+        new Setter(TemplatedControl.BackgroundProperty, Brushes.White),
+        new Setter(TemplatedControl.BorderBrushProperty, Brushes.Gray),
+        new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
+    },
+});
 
 var window = new MainWindow(new AppSettings(), task) { Width = 1440, Height = 900 };
 var model = (MainViewModel)window.DataContext!;
 window.Show();
+window.Activate();
 
 Save("01-editor");
 model.RowIndex = 1;
 Save("02-preview-next-row");
+model.SourceCollapsed = true;
+Save("03-source-collapsed");
+model.AddMapEntryCommand.Execute(null);
+var entry = model.MapEntries[^1];
+entry.Field = "lastName";
+entry.Template = "{{ row";
+Type(entry, ".", "Pavardė");
+Save("04-complete-columns");
+entry.Template = "{{ row['Pavardė'] ";
+Type(entry, "|", "string.upcase");
+Save("05-complete-functions");
+entry.Template = "{{ row['Pavardė'] | string.upcase }}";
+Save("06-completed");
+model.MapEntries.Remove(entry);
+model.SourceCollapsed = false;
 var url = model.Sink.Field("url")!;
 var urlText = url.Text;
 url.Text = "";
-Save("03-validation");
+Save("07-validation");
 url.Text = urlText;
 model.ShowRunSettings = true;
-Save("04-run-settings");
+Save("08-run-settings");
 model.ShowRunSettings = false;
 App.ApplyTheme(ThemeChoice.Dark);
-Save("05-dark");
+Save("09-dark");
 Console.WriteLine($"Frames saved to {output}");
 return;
 
+// Types into the entry's template editor, as a user would, so the completion window opens.
+void Type(MapEntryViewModel target, string text, string select)
+{
+    Dispatcher.UIThread.RunJobs();
+    var editor = window.GetVisualDescendants().OfType<MapEntryView>().First(v => v.DataContext == target)
+        .GetVisualDescendants().OfType<TemplateEditor>().First();
+    editor.FocusEditor(); // caret to the end
+    editor.GetVisualDescendants().OfType<TextArea>().First().Focus(); // headless: focusing the TextEditor does not reach its TextArea
+    window.KeyTextInput(text);
+    Render();
+    // The completion window is private to TemplateEditor and not in the window's visual tree.
+    var list = ((CompletionWindow)typeof(TemplateEditor).GetField("completion", BindingFlags.NonPublic | BindingFlags.Instance)!
+        .GetValue(editor)!).CompletionList;
+    list.SelectedItem = list.CompletionData.First(d => d.Text == select);
+}
+
 void Save(string name)
+{
+    Render();
+
+    var frame = window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame rendered.");
+    frame.Save(Path.Combine(output, name + ".png"));
+}
+
+static void Render()
 {
     for (var i = 0; i < 3; i++)
     {
         Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
     }
-
-    var frame = window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame rendered.");
-    frame.Save(Path.Combine(output, name + ".png"));
 }
 
 static string FindRepoRoot()
