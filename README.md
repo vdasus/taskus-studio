@@ -6,6 +6,8 @@ Studio creates new task files and opens existing ones, validates them as you typ
 `taskus` CLI uses, and shows the mapping result on real data. It runs on Windows, Linux and macOS
 (Avalonia 12, .NET 10).
 
+![Taskus Studio: editor, mapping preview, validation, run settings, dark theme](docs/images/demo.gif)
+
 ## Status
 
 Version 0.8.1. Works with Taskus 0.8.x.
@@ -91,6 +93,19 @@ Taskus.Core 0.8.0 must be published there before CI can build this version. To b
 ```sh
 dotnet pack ../Taskus/src/Taskus.Core -c Release -o local-packages
 ```
+
+### Screenshots
+
+The README GIF is rendered headlessly from the `excel-to-api-post` template and the sample
+`clients.xlsx`. After a UI change, rebuild it from the repo root (needs [uv](https://docs.astral.sh/uv/)):
+
+```sh
+dotnet run --project tools/Screenshots
+uv run --with pillow tools/Screenshots/make-gif.py
+```
+
+The first command writes PNG frames to `temp/screenshots/` (git-ignored), the second joins them into
+`docs/images/demo.gif`.
 
 ## Release steps
 

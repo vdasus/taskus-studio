@@ -94,3 +94,9 @@ it in every session and project.
 JSON object); the rendered text must be valid JSON. Studio shows it from the Taskus.Core schema as a multi-line
 template and offers `object.to_json` after `|`. **Why:** nested JSON such as `{"data":{"id":1}}` cannot come from
 a flat map; a new key is a schema change, so Taskus and Studio move to 0.9.
+
+## 2026-11-27 README GIF rendered headlessly
+
+The README GIF (`docs/images/demo.gif`) is rendered by `tools/Screenshots` with Avalonia.Headless and Skia,
+then joined with Pillow (`tools/Screenshots/make-gif.py`). **Why:** reproducible after every UI change,
+no manual screen recording; rejected: hand-made screenshots or a GIF recorded with ScreenToGif.

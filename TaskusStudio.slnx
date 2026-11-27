@@ -2,6 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/TaskusStudio/TaskusStudio.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Screenshots/Screenshots.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TaskusStudio.Tests/TaskusStudio.Tests.csproj" />
   </Folder>
